@@ -1,4 +1,4 @@
-// server.js (Global & Duygusal Versiyon)
+// server.js (Backend Kodu - DÜZELTİLMİŞ)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -15,35 +15,40 @@ const openai = new OpenAI({
 });
 
 app.post('/generate', async (req, res) => {
-    // Artık 'language' (dil) bilgisini de alıyoruz
-    const { topic, tone, length, language } = req.body;
+    const { topic, tone, length, language, platform } = req.body;
 
     if (!topic) {
         return res.status(400).json({ error: "Lütfen bir konu girin." });
     }
 
-    // Dil seçimine göre Yapay Zeka'ya talimat
-    const langInstruction = language === 'en' 
-        ? "OUTPUT MUST BE IN ENGLISH." 
-        : "YANIT SADECE TÜRKÇE OLMALIDIR.";
+    // Platforma göre talimatlar
+    let platformInstruction = "";
+    if (platform === 'twitter') {
+        platformInstruction = "Bu bir X (Twitter) tweeti. Maksimum 280 karakter. Vurucu, kısa ve zekice olsun. Az hashtag kullan.";
+    } else if (platform === 'linkedin') {
+        platformInstruction = "Bu bir LinkedIn gönderisi. Profesyonel, kurumsal dil kullan. Paragraflara böl.";
+    } else if (platform === 'facebook') {
+        platformInstruction = "Bu bir Facebook gönderisi. Samimi, etkileşim odaklı olsun. Sorular sor.";
+    } else {
+        platformInstruction = "Bu bir Instagram başlığı. Bol emoji kullan. Duygusal ve havalı olsun. Bol hashtag ekle.";
+    }
+
+    const langInstruction = language === 'en' ? "OUTPUT MUST BE IN ENGLISH." : "YANIT SADECE TÜRKÇE OLMALIDIR.";
 
     try {
         const prompt = `
-            Sen profesyonel bir Sosyal Medya İçerik Uzmanısın.
-            
-            GÖREV: Aşağıdaki KONU için, belirtilen TONDA ve UZUNLUKTA bir Instagram başlığı (caption) yaz.
-            
+            Sen profesyonel bir Sosyal Medya Uzmanısın.
+            GÖREV: Aşağıdaki bilgilere göre gönderi hazırla.
+            PLATFORM: ${platform ? platform.toUpperCase() : 'INSTAGRAM'}
             KURALLAR:
-            1. ${langInstruction} (Dil kuralına kesinlikle uy).
-            2. Başlık dışında ek açıklama, giriş veya sonuç cümlesi asla yazma.
-            3. Emoji kullanımı: Tonuna uygun bolca emoji kullan.
-            4. Hashtag: Konuyla ilgili 5 popüler hashtag ekle.
+            1. ${platformInstruction}
+            2. ${langInstruction}
+            3. Sadece metni yaz, açıklama ekleme.
             
             DETAYLAR:
             - KONU: "${topic}"
-            - TON (Duygu Durumu): "${tone}"
+            - TON: "${tone}"
             - UZUNLUK: ${length}
-            - DİL: ${language === 'en' ? 'English' : 'Türkçe'}
         `;
 
         const completion = await openai.chat.completions.create({
@@ -51,8 +56,7 @@ app.post('/generate', async (req, res) => {
             messages: [{ role: "user", content: prompt }],
         });
 
-        const caption = completion.choices[0].message.content;
-        res.json({ caption: caption });
+        res.json({ caption: completion.choices[0].message.content });
 
     } catch (error) {
         console.error("Hata:", error);
@@ -61,5 +65,5 @@ app.post('/generate', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Global Sunucu http://localhost:${PORT} adresinde hazır! 🌍`);
+    console.log(`Sunucu http://localhost:${PORT} adresinde hazır! 🚀`);
 });
