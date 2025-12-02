@@ -1,4 +1,4 @@
-// server.js (Backend Kodu - DÜZELTİLMİŞ)
+// server.js (Garanti Hashtag Versiyonu)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -21,29 +21,32 @@ app.post('/generate', async (req, res) => {
         return res.status(400).json({ error: "Lütfen bir konu girin." });
     }
 
-    // Platforma göre talimatlar
+    // Platform Talimatları
     let platformInstruction = "";
     if (platform === 'twitter') {
-        platformInstruction = "Bu bir X (Twitter) tweeti. Maksimum 280 karakter. Vurucu, kısa ve zekice olsun. Az hashtag kullan.";
+        platformInstruction = "Bu bir X (Twitter) tweeti. Maksimum 280 karakter. Vurucu olsun.";
     } else if (platform === 'linkedin') {
-        platformInstruction = "Bu bir LinkedIn gönderisi. Profesyonel, kurumsal dil kullan. Paragraflara böl.";
+        platformInstruction = "Bu bir LinkedIn gönderisi. Profesyonel ve kurumsal olsun.";
     } else if (platform === 'facebook') {
-        platformInstruction = "Bu bir Facebook gönderisi. Samimi, etkileşim odaklı olsun. Sorular sor.";
+        platformInstruction = "Bu bir Facebook gönderisi. Samimi ve etkileşim odaklı olsun.";
     } else {
-        platformInstruction = "Bu bir Instagram başlığı. Bol emoji kullan. Duygusal ve havalı olsun. Bol hashtag ekle.";
+        platformInstruction = "Bu bir Instagram başlığı. Bol emoji kullan. Görseli betimleyen duygusal bir dil kullan.";
     }
 
-    const langInstruction = language === 'en' ? "OUTPUT MUST BE IN ENGLISH." : "YANIT SADECE TÜRKÇE OLMALIDIR.";
+    const langInstruction = language === 'en' 
+        ? "OUTPUT MUST BE IN ENGLISH." 
+        : "YANIT SADECE TÜRKÇE OLMALIDIR.";
 
     try {
         const prompt = `
             Sen profesyonel bir Sosyal Medya Uzmanısın.
-            GÖREV: Aşağıdaki bilgilere göre gönderi hazırla.
-            PLATFORM: ${platform ? platform.toUpperCase() : 'INSTAGRAM'}
+            
+            GÖREV: Aşağıdaki bilgilere göre bir gönderi hazırla.
+            
             KURALLAR:
             1. ${platformInstruction}
             2. ${langInstruction}
-            3. Sadece metni yaz, açıklama ekleme.
+            3. Konuyla ilgili 3-4 popüler hashtag ekle.
             
             DETAYLAR:
             - KONU: "${topic}"
@@ -56,7 +59,12 @@ app.post('/generate', async (req, res) => {
             messages: [{ role: "user", content: prompt }],
         });
 
-        res.json({ caption: completion.choices[0].message.content });
+        // 🛑 İŞTE SİHİRLİ DOKUNUŞ BURADA:
+        // AI ne verirse versin, sonuna biz ekliyoruz.
+        const originalText = completion.choices[0].message.content;
+        const finalText = `${originalText}\n\n#CapGenius 🚀`;
+
+        res.json({ caption: finalText });
 
     } catch (error) {
         console.error("Hata:", error);
