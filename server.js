@@ -14,34 +14,29 @@ const openai = new OpenAI({
 });
 
 app.post('/generate', async (req, res) => {
-    // Platformu kaldırdık, sadece konu, ton, uzunluk ve dil alıyoruz.
     const { topic, tone, length, language } = req.body;
 
     if (!topic) {
         return res.status(400).json({ error: "Lütfen bir konu girin." });
     }
 
-    // Dil Talimatı
     const langInstruction = language === 'en' 
         ? "OUTPUT MUST BE IN ENGLISH." 
         : "YANIT SADECE TÜRKÇE OLMALIDIR. Sokak ağzı, Twitter jargonu ve doğal tepkiler kullanabilirsin.";
 
     try {
-        // 🔥 GÜÇLENDİRİLMİŞ PROMPT (FENOMEN MODU) 🔥
+        // 🔥 GÜÇLENDİRİLMİŞ PROMPT (MANTIKLI FENOMEN MODU) 🔥
         const prompt = `
-            Sen sıradan bir bot değil, sosyal medyanın nabzını tutan, fanatik, lafını esirgemeyen bir FENOMENSİN.
+            Sen sıradan bir bot değil, sosyal medyanın nabzını tutan, zeki ve lafını esirgemeyen bir FENOMENSİN.
             
             GÖREV: Verilen konu hakkında, seçilen duygu durumuna (ton) uygun, etkileşim alacak bir gönderi yaz.
             
-            ÖNEMLİ TAKTİKLER:
-            - Eğer konu bir futbol takımı, teknik direktör veya maç ise ve ton "Öfkeli" ise: Sanki maçı tribünde izlemiş ve çıldırmış bir taraftar gibi konuş. Hataları yüzüne vur, "Hocam", "Abi", "Yeter artık" gibi doğal tepkiler ver.
-            - Eğer ton "Mizahi" ise: Durumla inceden dalga geç, ironi yap.
-            - Asla "robot" gibi resmi konuşma. Samimi, iddialı ve duygusal ol.
-            - Konu hakkında net bilgin yoksa bile (örn: maç skoru), en olası senaryoya göre (örn: yenilgi veya kötü oyun) varsayımda bulunarak yorum yap.
-
-            KURALLAR:
-            1. ${langInstruction}
-            2. Konuyla ilgili 3-4 popüler ve alakalı hashtag ekle.
+            ÖNEMLİ KURALLAR (BUNLARA KESİN UY):
+            1. 🛑 MANTIKLI OL: "Sahille dolu sokaklar" gibi anlamsız, bozuk tamlamalar ASLA kurma. Türkçe'yi %100 doğal ve doğru kullan.
+            2. Futbol/Gündem Konuları: Eğer ton "Öfkeli" ise; maçı tribünde izlemiş taraftar gibi konuş. Hataları yüzüne vur. "Hocam", "Abi" gibi doğal tepkiler ver.
+            3. Asla "robot" gibi resmi konuşma. Samimi, iddialı ve duygusal ol.
+            4. ${langInstruction}
+            5. Konuyla ilgili 3-4 popüler ve alakalı hashtag ekle.
             
             GİRDİLER:
             - KONU: "${topic}"
@@ -52,12 +47,12 @@ app.post('/generate', async (req, res) => {
         const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [{ role: "user", content: prompt }],
+            temperature: 0.7, // Yaratıcılığı biraz kıstım ki saçmalamasın (Standart 1.0 dı)
         });
 
         const originalText = completion.choices[0].message.content;
 
         // 🛑 ZORUNLU İMZA:
-        // AI ne verirse versin, sonuna biz ekliyoruz.
         const finalText = `${originalText}\n\n#CapGenius 🚀`;
 
         res.json({ caption: finalText });
