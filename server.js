@@ -1,4 +1,3 @@
-// server.js (Garanti Hashtag Versiyonu)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -15,40 +14,36 @@ const openai = new OpenAI({
 });
 
 app.post('/generate', async (req, res) => {
-    const { topic, tone, length, language, platform } = req.body;
+    // Platformu kaldırdık, sadece konu, ton, uzunluk ve dil alıyoruz.
+    const { topic, tone, length, language } = req.body;
 
     if (!topic) {
         return res.status(400).json({ error: "Lütfen bir konu girin." });
     }
 
-    // Platform Talimatları
-    let platformInstruction = "";
-    if (platform === 'twitter') {
-        platformInstruction = "Bu bir X (Twitter) tweeti. Maksimum 280 karakter. Vurucu olsun.";
-    } else if (platform === 'linkedin') {
-        platformInstruction = "Bu bir LinkedIn gönderisi. Profesyonel ve kurumsal olsun.";
-    } else if (platform === 'facebook') {
-        platformInstruction = "Bu bir Facebook gönderisi. Samimi ve etkileşim odaklı olsun.";
-    } else {
-        platformInstruction = "Bu bir Instagram başlığı. Bol emoji kullan. Görseli betimleyen duygusal bir dil kullan.";
-    }
-
+    // Dil Talimatı
     const langInstruction = language === 'en' 
         ? "OUTPUT MUST BE IN ENGLISH." 
-        : "YANIT SADECE TÜRKÇE OLMALIDIR.";
+        : "YANIT SADECE TÜRKÇE OLMALIDIR. Sokak ağzı, Twitter jargonu ve doğal tepkiler kullanabilirsin.";
 
     try {
+        // 🔥 GÜÇLENDİRİLMİŞ PROMPT (FENOMEN MODU) 🔥
         const prompt = `
-            Sen profesyonel bir Sosyal Medya Uzmanısın.
+            Sen sıradan bir bot değil, sosyal medyanın nabzını tutan, fanatik, lafını esirgemeyen bir FENOMENSİN.
             
-            GÖREV: Aşağıdaki bilgilere göre bir gönderi hazırla.
+            GÖREV: Verilen konu hakkında, seçilen duygu durumuna (ton) uygun, etkileşim alacak bir gönderi yaz.
             
+            ÖNEMLİ TAKTİKLER:
+            - Eğer konu bir futbol takımı, teknik direktör veya maç ise ve ton "Öfkeli" ise: Sanki maçı tribünde izlemiş ve çıldırmış bir taraftar gibi konuş. Hataları yüzüne vur, "Hocam", "Abi", "Yeter artık" gibi doğal tepkiler ver.
+            - Eğer ton "Mizahi" ise: Durumla inceden dalga geç, ironi yap.
+            - Asla "robot" gibi resmi konuşma. Samimi, iddialı ve duygusal ol.
+            - Konu hakkında net bilgin yoksa bile (örn: maç skoru), en olası senaryoya göre (örn: yenilgi veya kötü oyun) varsayımda bulunarak yorum yap.
+
             KURALLAR:
-            1. ${platformInstruction}
-            2. ${langInstruction}
-            3. Konuyla ilgili 3-4 popüler hashtag ekle.
+            1. ${langInstruction}
+            2. Konuyla ilgili 3-4 popüler ve alakalı hashtag ekle.
             
-            DETAYLAR:
+            GİRDİLER:
             - KONU: "${topic}"
             - TON: "${tone}"
             - UZUNLUK: ${length}
@@ -59,9 +54,10 @@ app.post('/generate', async (req, res) => {
             messages: [{ role: "user", content: prompt }],
         });
 
-        // 🛑 İŞTE SİHİRLİ DOKUNUŞ BURADA:
-        // AI ne verirse versin, sonuna biz ekliyoruz.
         const originalText = completion.choices[0].message.content;
+
+        // 🛑 ZORUNLU İMZA:
+        // AI ne verirse versin, sonuna biz ekliyoruz.
         const finalText = `${originalText}\n\n#CapGenius 🚀`;
 
         res.json({ caption: finalText });
